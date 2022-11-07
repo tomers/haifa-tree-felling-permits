@@ -7,4 +7,4 @@ docker run \
     -v $(pwd)/src:/usr/src/app \
     -v $(pwd)/build:/usr/src/app/build \
     haifa-tree-felling-permits \
-    ./main.py
+    ./main.py $@

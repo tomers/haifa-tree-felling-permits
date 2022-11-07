@@ -2,9 +2,10 @@
 import shlex
 import subprocess
 from pathlib import Path
+import click
+import pandas as pd
 import pdfplumber
 from tqdm import tqdm
-import pandas as pd
 
 INPUT_FILE_URL = 'http://www1.haifa.muni.il/trees/rptPirsum.pdf'
 OUTPUT_DIR = Path.cwd().joinpath('build')
@@ -67,12 +68,20 @@ def normalize_df(df):
     return df
 
 
-if __name__ == '__main__':
-    if OUTPUT_PARQUET_FILE.exists():
+@click.command()
+@click.option('--download', is_flag=True, default=False, help='Download PDF file')
+@click.option('--save-xlsx', is_flag=True, default=True, help='Save as Excel file')
+def cli(download, save_xlsx):
+    if not download and OUTPUT_PARQUET_FILE.exists():
         df = pd.read_parquet(OUTPUT_PARQUET_FILE)
-        df = normalize_df(df)
     else:
         df = download_df()
+        df = normalize_df(df)
         df.to_parquet(OUTPUT_PARQUET_FILE)
 
-    df.to_excel(OUTPUT_XLSX_FILE)
+    if save_xlsx:
+        df.to_excel(OUTPUT_XLSX_FILE)
+
+
+if __name__ == '__main__':
+    cli()

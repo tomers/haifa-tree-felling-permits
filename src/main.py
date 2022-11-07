@@ -36,8 +36,7 @@ def pdf_to_rows():
                 yield dict(zip(header, row))
 
 
-def download_data():
-    download_pdf_file()
+def parse_pdf_to_dataframe():
     rows = pdf_to_rows()
     df = pd.DataFrame.from_dict(rows)
     return df
@@ -75,7 +74,8 @@ def cli(download, save_xlsx):
     if not download and OUTPUT_PARQUET_FILE.exists():
         df = pd.read_parquet(OUTPUT_PARQUET_FILE)
     else:
-        df = download_data()
+        download_pdf_file()
+        df = parse_pdf_to_dataframe()
         df = normalize_data(df)
         df.to_parquet(OUTPUT_PARQUET_FILE)
 

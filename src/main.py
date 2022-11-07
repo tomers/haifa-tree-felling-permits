@@ -5,6 +5,7 @@ from pathlib import Path
 import click
 import pandas as pd
 import pdfplumber
+from bidi.algorithm import get_display
 from tqdm import tqdm
 
 INPUT_FILE_URL = 'http://www1.haifa.muni.il/trees/rptPirsum.pdf'
@@ -20,9 +21,12 @@ def download_pdf_file():
     subprocess.run(shlex.split(cmd), check=True)
 
 
-def join_hebrew_multiline_text(text):
-    """Convert multi-line Hebrew text into a single line string"""
-    return ' '.join(text.strip().split('\n')[::-1])
+def parse_cell(text):
+    """Convert cell containing multi-line Hebrew text into a single line string"""
+    # join lines (it is parsed in reverse for some reason)
+    line = ' '.join(text.strip().split('\n')[::-1])
+    # fix Hebrew using Bidi
+    return get_display(line)
 
 
 def pdf_to_rows():
@@ -35,8 +39,9 @@ def pdf_to_rows():
     for page in tqdm(pdf.pages, desc='Parsing PDF', unit=' page'):
         for table in page.extract_tables():
             for row in table:
+                row = [parse_cell(cell) for cell in row]
                 if header is None:
-                    header = [join_hebrew_multiline_text(c) for c in row]
+                    header = row
                     continue
                 yield dict(zip(header, row))
 
@@ -48,28 +53,8 @@ def parse_pdf_to_dataframe():
 
 
 def normalize_data(df):
-    df = df.applymap(join_hebrew_multiline_text)
-    # reverse header row which contains all-Hebrew strings
-    df.rename(columns={x: x[::-1] for x in df.columns}, inplace=True)
+    return df
 
-    # reverse specific columns with Hebrew text
-    col_idxs_with_hebrew = [
-        0,  # הערות לעצים
-        2,  # שם עץ
-        3,  # סוג עץ
-        4,  # הערות לבקשה
-        5,  # בית
-        6,  # רח
-        7,  # מקום הבקשה
-        8,  # סיבה 2
-        9,  # סיבה
-        10,  # שם
-        11,  # פעולה
-    ]
-    cols_with_hebrew = [df.columns[pos]
-                        for pos in col_idxs_with_hebrew]
-    for col in cols_with_hebrew:
-        df[col] = df.loc[:, col].apply(lambda x: x[::-1])
     return df
 
 

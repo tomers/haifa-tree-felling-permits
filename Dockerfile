@@ -14,6 +14,7 @@ ARG python_deps=" \
     pandas \
     pdfplumber \
     pyarrow \
+    python-bidi \
     tqdm \
     "
 RUN pip3 install --upgrade pip && \

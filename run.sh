@@ -1,10 +1,14 @@
 #!/usr/bin/env bash
 
-docker build -t haifa-tree-felling-permits .
+DOCKER_TAG=haifa-tree-felling-permits
+
+docker build \
+    -t $DOCKER_TAG \
+    .
 docker run \
     --rm \
     -it \
     -v $(pwd)/src:/usr/src/app \
     -v $(pwd)/build:/usr/src/app/build \
-    haifa-tree-felling-permits \
+    $DOCKER_TAG \
     ./main.py $@

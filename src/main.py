@@ -58,6 +58,15 @@ def parse_pdf_to_dataframe():
 def normalize_data(df):
     return df
 
+
+def construct_address(row):
+    address = ('%s %s' % (row.loc['רח'], row.loc['בית'])).strip()
+    address += ', חיפה, ישראל'
+    return address
+
+
+def enrich_data(df):
+    df['address'] = df.apply(construct_address, axis=1)
     return df
 
 
@@ -71,6 +80,7 @@ def cli(download, save_xlsx):
         download_pdf_file()
         df = parse_pdf_to_dataframe()
         df = normalize_data(df)
+        df = enrich_data(df)
         df.to_parquet(OUTPUT_PARQUET_FILE)
 
     if save_xlsx:

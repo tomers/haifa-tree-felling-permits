@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import os
 import re
 import shlex
 import subprocess
@@ -7,6 +8,7 @@ import click
 import pandas as pd
 import pdfplumber
 from bidi.algorithm import get_display
+from geopy.geocoders import GoogleV3
 from tqdm import tqdm
 
 INPUT_FILE_URL = 'http://www1.haifa.muni.il/trees/rptPirsum.pdf'
@@ -14,6 +16,8 @@ OUTPUT_DIR = Path.cwd().joinpath('build')
 OUTPUT_PDF_FILE = OUTPUT_DIR.joinpath(Path(INPUT_FILE_URL).name)
 OUTPUT_PARQUET_FILE = OUTPUT_PDF_FILE.with_suffix('.parquet')
 OUTPUT_XLSX_FILE = OUTPUT_PDF_FILE.with_suffix('.xlsx')
+GCP_API_KEY = os.getenv('GCP_API_KEY')
+GEO_LOCATOR = GoogleV3(api_key=GCP_API_KEY)
 
 
 def download_pdf_file():
@@ -59,14 +63,23 @@ def normalize_data(df):
     return df
 
 
-def construct_address(row):
-    address = ('%s %s' % (row.loc['רח'], row.loc['בית'])).strip()
-    address += ', חיפה, ישראל'
-    return address
+def enrich_geo_data(row):
+    raw_address = ('%s %s' % (row.loc['רח'], row.loc['בית'])).strip()
+    raw_address += ', חיפה, ישראל'
+    geo = GEO_LOCATOR.geocode(raw_address)
+    return pd.Series([
+        raw_address,
+        geo.address,
+        geo.altitude,
+        geo.latitude,
+        geo.longitude
+    ])
 
 
 def enrich_data(df):
-    df['address'] = df.apply(construct_address, axis=1)
+    tqdm.pandas(desc='Fetching GEO data', unit=' address')
+    df[['raw_address', 'address', 'altitude', 'latitude', 'longitude']] = \
+        df.progress_apply(enrich_geo_data, axis=1)
     return df
 
 

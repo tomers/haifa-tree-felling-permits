@@ -10,6 +10,7 @@ RUN apt-get update \
 
 ARG python_deps=" \
     click \
+    geopy \
     openpyxl \
     pandas \
     pdfplumber \

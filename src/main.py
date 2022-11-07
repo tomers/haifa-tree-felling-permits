@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import re
 import shlex
 import subprocess
 from pathlib import Path
@@ -23,8 +24,10 @@ def download_pdf_file():
 
 def parse_cell(text):
     """Convert cell containing multi-line Hebrew text into a single line string"""
-    # join lines (it is parsed in reverse for some reason)
-    line = ' '.join(text.strip().split('\n')[::-1])
+    # join lines (it is parsed in reverse for some reason),
+    # and also strip excessive spaces
+    line = ' '.join(map(lambda x: re.sub(
+        ' +', ' ', x.strip()), text.split('\n')[::-1]))
     # fix Hebrew using Bidi
     return get_display(line)
 

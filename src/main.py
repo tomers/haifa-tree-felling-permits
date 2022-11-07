@@ -14,7 +14,7 @@ OUTPUT_PARQUET_FILE = OUTPUT_PDF_FILE.with_suffix('.parquet')
 OUTPUT_XLSX_FILE = OUTPUT_PDF_FILE.with_suffix('.xlsx')
 
 
-def download_file():
+def download_pdf_file():
     """Download the data file from web"""
     cmd = f'wget -q {INPUT_FILE_URL} --output-document {OUTPUT_PDF_FILE}'
     subprocess.run(shlex.split(cmd), check=True)
@@ -36,14 +36,14 @@ def pdf_to_rows():
                 yield dict(zip(header, row))
 
 
-def download_df():
-    download_file()
+def download_data():
+    download_pdf_file()
     rows = pdf_to_rows()
     df = pd.DataFrame.from_dict(rows)
     return df
 
 
-def normalize_df(df):
+def normalize_data(df):
     # reverse header row which contains all-Hebrew strings
     df.rename(columns={x: x[::-1] for x in df.columns}, inplace=True)
 
@@ -75,8 +75,8 @@ def cli(download, save_xlsx):
     if not download and OUTPUT_PARQUET_FILE.exists():
         df = pd.read_parquet(OUTPUT_PARQUET_FILE)
     else:
-        df = download_df()
-        df = normalize_df(df)
+        df = download_data()
+        df = normalize_data(df)
         df.to_parquet(OUTPUT_PARQUET_FILE)
 
     if save_xlsx:

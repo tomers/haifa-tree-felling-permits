@@ -27,7 +27,7 @@ def pdf_to_rows():
     """
     pdf = pdfplumber.open(OUTPUT_PDF_FILE)
     header = None
-    for page in tqdm(pdf.pages, unit='page'):
+    for page in tqdm(pdf.pages, desc='Parsing PDF', unit=' page'):
         for table in page.extract_tables():
             for row in table:
                 if header is None:

@@ -20,6 +20,11 @@ def download_pdf_file():
     subprocess.run(shlex.split(cmd), check=True)
 
 
+def join_hebrew_multiline_text(text):
+    """Convert multi-line Hebrew text into a single line string"""
+    return ' '.join(text.strip().split('\n')[::-1])
+
+
 def pdf_to_rows():
     """Generator that parses the input PDF file and return its rows.
         It joins all tables on all pages. Assuming single header line in first
@@ -31,7 +36,7 @@ def pdf_to_rows():
         for table in page.extract_tables():
             for row in table:
                 if header is None:
-                    header = row
+                    header = [join_hebrew_multiline_text(c) for c in row]
                     continue
                 yield dict(zip(header, row))
 
@@ -43,6 +48,7 @@ def parse_pdf_to_dataframe():
 
 
 def normalize_data(df):
+    df = df.applymap(join_hebrew_multiline_text)
     # reverse header row which contains all-Hebrew strings
     df.rename(columns={x: x[::-1] for x in df.columns}, inplace=True)
 

@@ -41,16 +41,16 @@ def pdf_to_rows():
         It joins all tables on all pages. Assuming single header line in first
         table
     """
-    pdf = pdfplumber.open(OUTPUT_PDF_FILE)
-    header = None
-    for page in tqdm(pdf.pages, desc='Parsing PDF', unit=' page'):
-        for table in page.extract_tables():
-            for row in table:
-                row = [parse_cell(cell) for cell in row]
-                if header is None:
-                    header = row
-                    continue
-                yield dict(zip(header, row))
+    with pdfplumber.open(OUTPUT_PDF_FILE) as pdf:
+        header = None
+        for page in tqdm(pdf.pages, desc='Parsing PDF', unit=' page'):
+            for table in page.extract_tables():
+                for row in table:
+                    row = [parse_cell(cell) for cell in row]
+                    if header is None:
+                        header = row
+                        continue
+                    yield dict(zip(header, row))
 
 
 def parse_pdf_to_dataframe():

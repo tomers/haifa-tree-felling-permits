@@ -15,9 +15,12 @@ else
     exit 1
 fi
 
-docker build \
-    -t $DOCKER_TAG \
-    .
+if [ -z "$NO_BUILD" ]; then
+    docker build \
+        -t $DOCKER_TAG \
+        .
+fi
+
 docker run \
     --rm \
     -it \

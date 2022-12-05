@@ -86,14 +86,16 @@ def enrich_data(df):
 @click.command()
 @click.option('--download', is_flag=True, default=False, help='Download PDF file')
 @click.option('--save-xlsx', is_flag=True, default=True, help='Save as Excel file')
-def cli(download, save_xlsx):
+@click.option('--enrich', is_flag=True, default=False, help='Save as Excel file')
+def cli(download, save_xlsx, enrich):
     if not download and OUTPUT_PARQUET_FILE.exists():
         df = pd.read_parquet(OUTPUT_PARQUET_FILE)
     else:
         download_pdf_file()
         df = parse_pdf_to_dataframe()
         df = normalize_data(df)
-        df = enrich_data(df)
+        if enrich:
+            df = enrich_data(df)
         df.to_parquet(OUTPUT_PARQUET_FILE)
 
     if save_xlsx:

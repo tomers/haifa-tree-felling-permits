@@ -18,7 +18,7 @@ OUTPUT_PDF_FILE = OUTPUT_DIR.joinpath(Path(INPUT_FILE_URL).name)
 OUTPUT_PARQUET_FILE = OUTPUT_PDF_FILE.with_suffix('.parquet')
 OUTPUT_XLSX_FILE = OUTPUT_PDF_FILE.with_suffix('.xlsx')
 GCP_API_KEY = os.getenv('GCP_API_KEY')
-GEO_LOCATOR = GoogleV3(api_key=GCP_API_KEY)
+GEO_LOCATOR = GoogleV3(api_key=GCP_API_KEY) if GCP_API_KEY else None
 
 
 def download_pdf_file():
@@ -61,6 +61,7 @@ def parse_pdf_to_dataframe():
 
 
 def enrich_geo_data(row):
+    assert GEO_LOCATOR is not None, 'Missing GEO_LOCATOR'
     raw_address = ('%s %s' % (row.loc['רח'], row.loc['בית'])).strip()
     raw_address += ', חיפה, ישראל'
     geo = GEO_LOCATOR.geocode(raw_address)

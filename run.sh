@@ -28,4 +28,4 @@ docker run \
     -v $(pwd)/src:/usr/src/app \
     -v $(pwd)/build:/usr/src/app/build \
     $DOCKER_TAG \
-    ./main.py $@
+    $@

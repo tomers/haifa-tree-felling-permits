@@ -22,3 +22,6 @@ RUN pip3 install --upgrade pip && \
     pip3 install --no-cache-dir ${python_deps}
 
 WORKDIR /usr/src/app
+COPY src /usr/src/app/
+
+ENTRYPOINT [ "/usr/src/app/main.py" ]

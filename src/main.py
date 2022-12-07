@@ -59,10 +59,6 @@ def parse_pdf_to_dataframe():
     return df
 
 
-def normalize_data(df):
-    return df
-
-
 def enrich_geo_data(row):
     raw_address = ('%s %s' % (row.loc['רח'], row.loc['בית'])).strip()
     raw_address += ', חיפה, ישראל'
@@ -93,7 +89,6 @@ def cli(download, save_xlsx, enrich):
     else:
         download_pdf_file()
         df = parse_pdf_to_dataframe()
-        df = normalize_data(df)
         if enrich:
             df = enrich_data(df)
         df.to_parquet(OUTPUT_PARQUET_FILE)

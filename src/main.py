@@ -26,7 +26,7 @@ GEO_LOCATOR = GoogleV3(api_key=GCP_API_KEY) if GCP_API_KEY else None
 def download_pdf_file():
     """Download the data file from web"""
     assert OUTPUT_PDF_FILE.parent.exists(), \
-        f'Please mount output directory {OUTPUT_PDF_FILE.parent} as docker volume'
+        f"Please mount output directory {OUTPUT_PDF_FILE.parent} as docker volume"
     cmd = f'wget -q {INPUT_FILE_URL} --output-document {OUTPUT_PDF_FILE}'
     subprocess.run(shlex.split(cmd), check=True)
 
@@ -67,8 +67,8 @@ def parse_pdf_to_dataframe():
 
 def enrich_geo_data(row):
     """Send street address to Geo service and return GRO coordinates"""
-    assert GEO_LOCATOR is not None, 'Missing GEO_LOCATOR'
-    raw_address = ('%s %s' % (row.loc['רח'], row.loc['בית'])).strip()ip()
+    assert GEO_LOCATOR is not None, "Missing GEO_LOCATOR"
+    raw_address = f'{row.loc["רח"]} {row.loc["בית"]}'.strip()
     raw_address += ', חיפה, ישראל'
     geo = GEO_LOCATOR.geocode(raw_address)
     return pd.Series([

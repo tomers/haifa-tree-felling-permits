@@ -4,6 +4,7 @@ import re
 import shlex
 import subprocess
 from pathlib import Path
+from tempfile import gettempdir
 import click
 import pandas as pd
 import pdfplumber
@@ -12,7 +13,7 @@ from geopy.geocoders import GoogleV3
 from tqdm import tqdm
 
 INPUT_FILE_URL = 'http://www1.haifa.muni.il/trees/rptPirsum.pdf'
-OUTPUT_DIR = Path.cwd().joinpath('build')
+OUTPUT_DIR = Path(gettempdir()).joinpath('build')
 OUTPUT_PDF_FILE = OUTPUT_DIR.joinpath(Path(INPUT_FILE_URL).name)
 OUTPUT_PARQUET_FILE = OUTPUT_PDF_FILE.with_suffix('.parquet')
 OUTPUT_XLSX_FILE = OUTPUT_PDF_FILE.with_suffix('.xlsx')

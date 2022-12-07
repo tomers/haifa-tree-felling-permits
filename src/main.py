@@ -23,6 +23,8 @@ GEO_LOCATOR = GoogleV3(api_key=GCP_API_KEY) if GCP_API_KEY else None
 
 def download_pdf_file():
     """Download the data file from web"""
+    assert OUTPUT_PDF_FILE.parent.exists(), \
+        f'Please mount output directory {OUTPUT_PDF_FILE.parent} as docker volume'
     cmd = f'wget -q {INPUT_FILE_URL} --output-document {OUTPUT_PDF_FILE}'
     subprocess.run(shlex.split(cmd), check=True)
 

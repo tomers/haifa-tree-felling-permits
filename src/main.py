@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+"""Fetch Haifa tree felling permit and export them in Excel format
+"""
 import os
 import re
 import shlex
@@ -57,14 +59,16 @@ def pdf_to_rows():
 
 
 def parse_pdf_to_dataframe():
+    """Parse tables in PDF and return its content as a dataframe"""
     rows = pdf_to_rows()
     df = pd.DataFrame.from_dict(rows)
     return df
 
 
 def enrich_geo_data(row):
+    """Send street address to Geo service and return GRO coordinates"""
     assert GEO_LOCATOR is not None, 'Missing GEO_LOCATOR'
-    raw_address = ('%s %s' % (row.loc['רח'], row.loc['בית'])).strip()
+    raw_address = ('%s %s' % (row.loc['רח'], row.loc['בית'])).strip()ip()
     raw_address += ', חיפה, ישראל'
     geo = GEO_LOCATOR.geocode(raw_address)
     return pd.Series([
@@ -77,6 +81,7 @@ def enrich_geo_data(row):
 
 
 def enrich_data(df):
+    """Extend dataframe with GEO data retrieved from Geo locator service"""
     tqdm.pandas(desc='Fetching GEO data', unit=' address')
     df[['raw_address', 'address', 'altitude', 'latitude', 'longitude']] = \
         df.progress_apply(enrich_geo_data, axis=1)
@@ -88,6 +93,7 @@ def enrich_data(df):
 @click.option('--save-xlsx', is_flag=True, default=True, help='Save as Excel file')
 @click.option('--enrich', is_flag=True, default=False, help='Save as Excel file')
 def cli(download, save_xlsx, enrich):
+    """Entrypoint for CLI commands"""
     if not download and OUTPUT_PARQUET_FILE.exists():
         df = pd.read_parquet(OUTPUT_PARQUET_FILE)
     else:

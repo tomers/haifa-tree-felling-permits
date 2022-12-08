@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Fetch Haifa tree felling permit and export them in Excel format
 """
+import logging
 import os
 import re
 import shlex
@@ -14,6 +15,11 @@ from bidi.algorithm import get_display
 from geopy.geocoders import GoogleV3
 from tqdm import tqdm
 
+
+fmt = '%(asctime)s %(name)s <%(levelname)s> %(message)s'
+logging.basicConfig(level=logging.INFO, format=fmt)
+LOG = logging.getLogger('haifa-tree-felling-permits')
+
 INPUT_FILE_URL = 'http://www1.haifa.muni.il/trees/rptPirsum.pdf'
 OUTPUT_DIR = Path(gettempdir()).joinpath('build')
 OUTPUT_PDF_FILE = OUTPUT_DIR.joinpath(Path(INPUT_FILE_URL).name)
@@ -25,6 +31,7 @@ GEO_LOCATOR = GoogleV3(api_key=GCP_API_KEY) if GCP_API_KEY else None
 
 def download_pdf_file():
     """Download the data file from web"""
+    LOG.info("Downloading PDF file")
     assert OUTPUT_PDF_FILE.parent.exists(), \
         f"Please mount output directory {OUTPUT_PDF_FILE.parent} as docker volume"
     cmd = f'wget -q {INPUT_FILE_URL} --output-document {OUTPUT_PDF_FILE}'
@@ -60,9 +67,9 @@ def pdf_to_rows():
 
 def parse_pdf_to_dataframe():
     """Parse tables in PDF and return its content as a dataframe"""
+    LOG.info("Parsing PDF")
     rows = pdf_to_rows()
-    df = pd.DataFrame.from_dict(rows)
-    return df
+    return pd.DataFrame.from_dict(rows)
 
 
 def enrich_geo_data(row):
@@ -82,6 +89,7 @@ def enrich_geo_data(row):
 
 def enrich_data(df):
     """Extend dataframe with GEO data retrieved from Geo locator service"""
+    LOG.info("Enriching dataframe")
     tqdm.pandas(desc='Fetching GEO data', unit=' address')
     df[['raw_address', 'address', 'altitude', 'latitude', 'longitude']] = \
         df.progress_apply(enrich_geo_data, axis=1)
@@ -92,18 +100,24 @@ def enrich_data(df):
 @click.option('--download', is_flag=True, default=False, help='Download PDF file')
 @click.option('--save-xlsx', is_flag=True, default=True, help='Save as Excel file')
 @click.option('--enrich', is_flag=True, default=False, help='Save as Excel file')
-def cli(download, save_xlsx, enrich):
+@click.option('-v', '--verbose', count=True)
+def cli(download, save_xlsx, enrich, verbose):
     """Entrypoint for CLI commands"""
     if not download and OUTPUT_PARQUET_FILE.exists():
+        LOG.info("Reading Parquet file")
         df = pd.read_parquet(OUTPUT_PARQUET_FILE)
     else:
         download_pdf_file()
         df = parse_pdf_to_dataframe()
         if enrich:
             df = enrich_data(df)
+        LOG.info("Storing Parquet file")
         df.to_parquet(OUTPUT_PARQUET_FILE)
+    if verbose:
+        LOG.info("\n%s", df)
 
     if save_xlsx:
+        LOG.info("Storing Excel file")
         df.to_excel(OUTPUT_XLSX_FILE)
 
 

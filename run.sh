@@ -27,6 +27,6 @@ docker run \
     -it \
     -e GCP_API_KEY=$GCP_API_KEY \
     -v $(pwd)/src:/usr/src/app \
-    -v $(pwd)/build:/tmp/build \
+    -v $(pwd)/build:/output \
     $DOCKER_TAG \
     $@

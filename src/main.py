@@ -21,7 +21,7 @@ logging.basicConfig(level=logging.INFO, format=fmt)
 LOG = logging.getLogger('haifa-tree-felling-permits')
 
 INPUT_FILE_URL = 'http://www1.haifa.muni.il/trees/rptPirsum.pdf'
-OUTPUT_DIR = Path(gettempdir()).joinpath('build')
+OUTPUT_DIR = Path('/output')
 OUTPUT_PDF_FILE = OUTPUT_DIR.joinpath(Path(INPUT_FILE_URL).name)
 OUTPUT_PARQUET_FILE = OUTPUT_PDF_FILE.with_suffix('.parquet')
 OUTPUT_XLSX_FILE = OUTPUT_PDF_FILE.with_suffix('.xlsx')

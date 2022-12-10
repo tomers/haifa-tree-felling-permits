@@ -6,8 +6,9 @@ import os
 import re
 import shlex
 import subprocess
+from datetime import datetime
 from pathlib import Path
-from tempfile import gettempdir
+import boto3
 import click
 import pandas as pd
 import pdfplumber
@@ -27,6 +28,8 @@ OUTPUT_PARQUET_FILE = OUTPUT_PDF_FILE.with_suffix('.parquet')
 OUTPUT_XLSX_FILE = OUTPUT_PDF_FILE.with_suffix('.xlsx')
 GCP_API_KEY = os.getenv('GCP_API_KEY')
 GEO_LOCATOR = GoogleV3(api_key=GCP_API_KEY) if GCP_API_KEY else None
+AWS_FAKE_ENDPOINT = os.getenv('AWS_FAKE_ENDPOINT')
+S3_CLIENT = boto3.client('s3', endpoint_url=AWS_FAKE_ENDPOINT)
 
 
 def download_pdf_file():
@@ -96,12 +99,26 @@ def enrich_data(df):
     return df
 
 
+def upload_files_to_s3(s3_bucket):
+    """Upload output files to S3"""
+    LOG.info("Uploading files to S3")
+    now = datetime.now()
+    backup_path = f'year={now.year}/month={now.month}/day={now.day}'
+    for file in (OUTPUT_PDF_FILE, OUTPUT_PARQUET_FILE, OUTPUT_XLSX_FILE):
+        basename = file.name
+        for s3_key in (basename, f'{backup_path}/{basename}'):
+            LOG.info("Uploading to s3://%s/%s", s3_bucket, s3_key)
+            S3_CLIENT.upload_file(Bucket=s3_bucket, Key=s3_key,
+                                  Filename=str(file))
+
+
 @click.command()
 @click.option('--download', is_flag=True, default=False, help='Download PDF file')
 @click.option('--save-xlsx', is_flag=True, default=True, help='Save as Excel file')
 @click.option('--enrich', is_flag=True, default=False, help='Save as Excel file')
+@click.option('--upload-s3-bucket', help='Upload files to S3')
 @click.option('-v', '--verbose', count=True)
-def cli(download, save_xlsx, enrich, verbose):
+def cli(download, save_xlsx, enrich, upload_s3_bucket, verbose):
     """Entrypoint for CLI commands"""
     if not download and OUTPUT_PARQUET_FILE.exists():
         LOG.info("Reading Parquet file")
@@ -119,6 +136,9 @@ def cli(download, save_xlsx, enrich, verbose):
     if save_xlsx:
         LOG.info("Storing Excel file")
         df.to_excel(OUTPUT_XLSX_FILE)
+
+    if upload_s3_bucket:
+        upload_files_to_s3(upload_s3_bucket)
 
 
 if __name__ == '__main__':

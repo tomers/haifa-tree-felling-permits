@@ -22,13 +22,17 @@ The tool in this repository performs the following operations:
 ```
 docker run \
     --rm -t \
+    -e AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID \
+    -e AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY \
     -v $(pwd):/output \
     tomersha/haifa-tree-felling-permits \
-    --download
+    --download \
+    --upload-s3-bucket haifa-tree-felling-permits
 ```
 
 Notes:
 - Output files will be created in current working directory.
+- `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` environment variables are only required when using the`--upload-s3-bucket` action.
 
 ## Local run (development)
 
@@ -36,7 +40,6 @@ Just run `./run.sh`.
 
 ## Future Plans
 
-- Integrate with [meirim.org](https://meirim.org/trees/)
 - Publish [bubble map](https://www.data-to-viz.com/graph/bubblemap.html) with historical and current data
 - Provide web view with sortable table and a map
 - Incorporate a tracking mechanism with notification to subscribers, to show and alert of temporal changes - modification to existing permits, or even post-mortem deletion of permits

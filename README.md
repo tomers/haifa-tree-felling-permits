@@ -19,6 +19,19 @@ The tool in this repository performs the following operations:
 
 ## Quick Start
 
+```
+docker run \
+    --rm -t \
+    -v $(pwd):/output \
+    tomersha/haifa-tree-felling-permits \
+    --download
+```
+
+Notes:
+- Output files will be created in current working directory.
+
+## Local run (development)
+
 Just run `./run.sh`.
 
 ## Future Plans

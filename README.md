@@ -22,6 +22,7 @@ The tool in this repository performs the following operations:
 ```
 docker run \
     --rm -t \
+    -e GCP_API_KEY=$GCP_API_KEY \
     -e AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID \
     -e AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY \
     -v $(pwd):/output \
@@ -32,6 +33,7 @@ docker run \
 
 Notes:
 - Output files will be created in current working directory.
+- `GCP_API_KEY` environment variable is only required when using the `--enrich` action.
 - `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` environment variables are only required when using the`--upload-s3-bucket` action.
 
 ## Local run (development)

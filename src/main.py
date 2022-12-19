@@ -99,13 +99,15 @@ def enrich_data(df):
     return df
 
 
-def upload_files_to_s3(s3_bucket):
+def upload_files_to_s3(s3_bucket, s3_path):
     """Upload output files to S3"""
     LOG.info("Uploading files to S3")
     now = datetime.now()
     backup_path = f'year={now.year}/month={now.month}/day={now.day}'
     for file in (OUTPUT_PDF_FILE, OUTPUT_PARQUET_FILE, OUTPUT_XLSX_FILE):
         basename = file.name
+        if s3_path:
+            basename = f'{s3_path}/{basename}'
         for s3_key in (basename, f'{backup_path}/{basename}'):
             LOG.info("Uploading to s3://%s/%s", s3_bucket, s3_key)
             S3_CLIENT.upload_file(Bucket=s3_bucket, Key=s3_key,
@@ -116,10 +118,14 @@ def upload_files_to_s3(s3_bucket):
 @click.option('--download', is_flag=True, default=False, help='Download PDF file')
 @click.option('--save-xlsx', is_flag=True, default=True, help='Save as Excel file')
 @click.option('--enrich', is_flag=True, default=False, help='Save as Excel file')
-@click.option('--upload-s3-bucket', help='Upload files to S3')
+@click.option('--upload', is_flag=True, default=False, help='Upload files to S3')
+@click.option('--s3-bucket', help='S3 bucket to upload to')
+@click.option('--s3-path', help='S3 path to upload to')
 @click.option('-v', '--verbose', count=True)
-def cli(download, save_xlsx, enrich, upload_s3_bucket, verbose):
+def cli(download, save_xlsx, enrich, upload, s3_bucket, s3_path, verbose):
     """Entrypoint for CLI commands"""
+    # pylint: disable=too-many-arguments
+
     if not download and OUTPUT_PARQUET_FILE.exists():
         LOG.info("Reading Parquet file")
         df = pd.read_parquet(OUTPUT_PARQUET_FILE)
@@ -137,8 +143,9 @@ def cli(download, save_xlsx, enrich, upload_s3_bucket, verbose):
         LOG.info("Storing Excel file")
         df.to_excel(OUTPUT_XLSX_FILE)
 
-    if upload_s3_bucket:
-        upload_files_to_s3(upload_s3_bucket)
+    if upload:
+        assert s3_bucket, 'S3 bucket must be specified'
+        upload_files_to_s3(s3_bucket, s3_path)
 
 
 if __name__ == '__main__':

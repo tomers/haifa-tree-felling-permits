@@ -28,7 +28,7 @@ docker run \
     -v $(pwd):/output \
     tomersha/haifa-tree-felling-permits \
     --download \
-    --upload-s3-bucket haifa-tree-felling-permits
+    --upload --s3-bucket haifa-tree-felling-permits
 ```
 
 Notes:

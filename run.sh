@@ -28,6 +28,7 @@ docker run \
     -e GCP_API_KEY=$GCP_API_KEY \
     -e AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID \
     -e AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY \
+    -e SCRAPINGBEE_API_KEY=$SCRAPINGBEE_API_KEY \
     -v $(pwd)/src:/usr/src/app \
     -v $(pwd)/build:/output \
     $DOCKER_TAG \

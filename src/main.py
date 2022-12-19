@@ -14,8 +14,8 @@ import pandas as pd
 import pdfplumber
 from bidi.algorithm import get_display
 from geopy.geocoders import GoogleV3
+from scrapingbee import ScrapingBeeClient
 from tqdm import tqdm
-
 
 fmt = '%(asctime)s %(name)s <%(levelname)s> %(message)s'
 logging.basicConfig(level=logging.INFO, format=fmt)
@@ -26,27 +26,39 @@ OUTPUT_DIR = Path('/output')
 OUTPUT_PDF_FILE = OUTPUT_DIR.joinpath(Path(INPUT_FILE_URL).name)
 OUTPUT_PARQUET_FILE = OUTPUT_PDF_FILE.with_suffix('.parquet')
 OUTPUT_XLSX_FILE = OUTPUT_PDF_FILE.with_suffix('.xlsx')
+SCRAPINGBEE_API_KEY = os.getenv('SCRAPINGBEE_API_KEY')
 GCP_API_KEY = os.getenv('GCP_API_KEY')
 GEO_LOCATOR = GoogleV3(api_key=GCP_API_KEY) if GCP_API_KEY else None
 AWS_FAKE_ENDPOINT = os.getenv('AWS_FAKE_ENDPOINT')
 S3_CLIENT = boto3.client('s3', endpoint_url=AWS_FAKE_ENDPOINT)
 
 
-def download_pdf_file():
+def download_pdf_file(proxy_country=None):
     """Download the data file from web"""
     LOG.info("Downloading PDF file")
     assert OUTPUT_PDF_FILE.parent.exists(), \
         f"Please mount output directory {OUTPUT_PDF_FILE.parent} as docker volume"
-    cmd = f'wget -q {INPUT_FILE_URL} --output-document {OUTPUT_PDF_FILE}'
-    try:
-        subprocess.run(shlex.split(cmd), check=True)
-    except subprocess.CalledProcessError as e:
-        LOG.error("Failed downloading file: %s", cmd)
-        if e.stdout:
-            LOG.error("Stdout: %s", e.stdout.decode())
-        if e.stderr:
-            LOG.error("Stderr: %s", e.stderr.decode())
-        raise
+
+    if proxy_country:
+        # Download using ScrapingBee proxy
+        assert SCRAPINGBEE_API_KEY, "Missing ScrapingBee API KEY"
+        client = ScrapingBeeClient(api_key=SCRAPINGBEE_API_KEY)
+        params = dict(country_code=proxy_country, premium_proxy=True)
+        response = client.get(INPUT_FILE_URL, params=params)
+        assert response.ok, f"Failed downloading file through proxy: {response}"
+        OUTPUT_PDF_FILE.write_bytes(response.content)
+    else:
+        # Direct download
+        cmd = f'wget -q {INPUT_FILE_URL} --output-document {OUTPUT_PDF_FILE}'
+        try:
+            subprocess.run(shlex.split(cmd), check=True)
+        except subprocess.CalledProcessError as e:
+            LOG.error("Failed downloading file: %s", cmd)
+            if e.stdout:
+                LOG.error("Stdout: %s", e.stdout.decode())
+            if e.stderr:
+                LOG.error("Stderr: %s", e.stderr.decode())
+            raise
 
 
 def parse_cell(text):
@@ -129,8 +141,9 @@ def upload_files_to_s3(s3_bucket, s3_path):
 @click.option('--upload', is_flag=True, default=False, help='Upload files to S3')
 @click.option('--s3-bucket', help='S3 bucket to upload to')
 @click.option('--s3-path', help='S3 path to upload to')
+@click.option('--proxy-country', help='Use scrapingbee proxy from the given country code')
 @click.option('-v', '--verbose', count=True)
-def cli(download, save_xlsx, enrich, upload, s3_bucket, s3_path, verbose):
+def cli(download, save_xlsx, enrich, upload, s3_bucket, s3_path, proxy_country, verbose):
     """Entrypoint for CLI commands"""
     # pylint: disable=too-many-arguments
 
@@ -138,7 +151,7 @@ def cli(download, save_xlsx, enrich, upload, s3_bucket, s3_path, verbose):
         LOG.info("Reading Parquet file")
         df = pd.read_parquet(OUTPUT_PARQUET_FILE)
     else:
-        download_pdf_file()
+        download_pdf_file(proxy_country)
         df = parse_pdf_to_dataframe()
         if enrich:
             df = enrich_data(df)

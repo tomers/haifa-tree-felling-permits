@@ -27,8 +27,8 @@ docker run \
     -e AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY \
     -v $(pwd):/output \
     tomersha/haifa-tree-felling-permits \
-    --download \
-    --upload --s3-bucket haifa-tree-felling-permits
+        --download \
+        --upload --s3-bucket haifa-tree-felling-permits
 ```
 
 Notes:
@@ -50,9 +50,9 @@ docker run \
     -v $(pwd):/output \
     -e SCRAPINGBEE_API_KEY=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx \
     tomersha/haifa-tree-felling-permits \
-    --proxy-county il \
-    --download \
-    --upload --s3-bucket stg-service-tree-6b3da185 --s3-path haifa \
+        --proxy-county il \
+        --download \
+        --upload --s3-bucket stg-service-tree-6b3da185 --s3-path haifa \
 ```
 
 ## Future Plans

@@ -38,7 +38,15 @@ def download_pdf_file():
     assert OUTPUT_PDF_FILE.parent.exists(), \
         f"Please mount output directory {OUTPUT_PDF_FILE.parent} as docker volume"
     cmd = f'wget -q {INPUT_FILE_URL} --output-document {OUTPUT_PDF_FILE}'
-    subprocess.run(shlex.split(cmd), check=True)
+    try:
+        subprocess.run(shlex.split(cmd), check=True)
+    except subprocess.CalledProcessError as e:
+        LOG.error("Failed downloading file: %s", cmd)
+        if e.stdout:
+            LOG.error("Stdout: %s", e.stdout.decode())
+        if e.stderr:
+            LOG.error("Stderr: %s", e.stderr.decode())
+        raise
 
 
 def parse_cell(text):

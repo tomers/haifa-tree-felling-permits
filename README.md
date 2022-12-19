@@ -32,6 +32,7 @@ docker run \
 ```
 
 Notes:
+
 - Output files will be created in current working directory.
 - `GCP_API_KEY` environment variable is only required when using the `--enrich` action.
 - `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` environment variables are only required when using the`--upload-s3-bucket` action.
@@ -39,6 +40,20 @@ Notes:
 ## Local run (development)
 
 Just run `./run.sh`.
+
+## Download command for Meirim
+
+```
+docker run \
+    --pull always \
+    --rm -t \
+    -v $(pwd):/output \
+    -e SCRAPINGBEE_API_KEY=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx \
+    tomersha/haifa-tree-felling-permits \
+    --proxy-county il \
+    --download \
+    --upload --s3-bucket stg-service-tree-6b3da185 --s3-path haifa \
+```
 
 ## Future Plans
 

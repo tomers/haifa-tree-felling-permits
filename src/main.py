@@ -6,6 +6,7 @@ import os
 import re
 import shlex
 import subprocess
+import tempfile
 from datetime import datetime
 from pathlib import Path
 import boto3
@@ -23,6 +24,8 @@ LOG = logging.getLogger('haifa-tree-felling-permits')
 
 INPUT_FILE_URL = 'http://www1.haifa.muni.il/trees/rptPirsum.pdf'
 OUTPUT_DIR = Path('/output')
+if not OUTPUT_DIR.exists():
+    OUTPUT_DIR = Path(tempfile.mkdtemp())
 OUTPUT_PDF_FILE = OUTPUT_DIR.joinpath(Path(INPUT_FILE_URL).name)
 OUTPUT_PARQUET_FILE = OUTPUT_PDF_FILE.with_suffix('.parquet')
 OUTPUT_XLSX_FILE = OUTPUT_PDF_FILE.with_suffix('.xlsx')
@@ -36,8 +39,7 @@ S3_CLIENT = boto3.client('s3', endpoint_url=AWS_FAKE_ENDPOINT)
 def download_pdf_file(proxy_country=None):
     """Download the data file from web"""
     LOG.info("Downloading PDF file")
-    assert OUTPUT_PDF_FILE.parent.exists(), \
-        f"Please mount output directory {OUTPUT_PDF_FILE.parent} as docker volume"
+    assert OUTPUT_PDF_FILE.parent.exists()
 
     if proxy_country:
         # Download using ScrapingBee proxy

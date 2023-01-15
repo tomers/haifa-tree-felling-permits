@@ -17,7 +17,6 @@ fi
 
 if [ -z "$NO_BUILD" ]; then
     docker build \
-        --quiet \
         -t $DOCKER_TAG \
         .
 fi
